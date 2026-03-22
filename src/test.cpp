@@ -1,41 +1,61 @@
+// clang-format off
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
+// clang-format on
+#include <cstddef>
 #include <iostream>
+#include <ostream>
+
+void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+void processInput(GLFWwindow *window);
 
 int main() {
-  // Initialize the library
-  if (!glfwInit()) {
-    std::cerr << "Failed to initialize GLFW" << std::endl;
-    return -1;
-  }
+  glfwInit();
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  // Create a windowed mode window and its OpenGL context
+  int width = 800;
+  int height = 600;
   GLFWwindow *window =
-      glfwCreateWindow(640, 480, "GLFW Test Window", NULL, NULL);
-  if (!window) {
-    std::cerr << "Failed to create GLFW window" << std::endl;
+      glfwCreateWindow(width, height, "LearnOpenGL", NULL, NULL);
+  if (window == NULL) {
+    std::cout << "Error: Window unable to be createad" << std::endl;
     glfwTerminate();
     return -1;
   }
 
-  // Make the window's context current
   glfwMakeContextCurrent(window);
 
-  std::cout << "GLFW is working! OpenGL Version: " << glGetString(GL_VERSION)
-            << std::endl;
+  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    std::cout << "Failed to initialized GLAD" << std::endl;
+    return -1;
+  }
 
-  // Loop until the user closes the window
+  framebuffer_size_callback(window, width, height);
+
   while (!glfwWindowShouldClose(window)) {
-    // Render a simple color clear
-    glClearColor(0.2f, 0.4f, 0.2f, 1.0f);
+    processInput(window);
+
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Swap front and back buffers
     glfwSwapBuffers(window);
-
-    // Poll for and process events
     glfwPollEvents();
   }
 
   glfwTerminate();
   return 0;
+}
+
+void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
+  glViewport(0, 0, width, height);
+}
+void processInput(GLFWwindow *window) {
+  int x = 0;
+  int escapePressed = glfwGetKey(window, GLFW_KEY_ESCAPE);
+  int spacebarPressed = glfwGetKey(window, GLFW_KEY_SPACE);
+  if (escapePressed || spacebarPressed == GLFW_PRESS) {
+    glfwSetWindowShouldClose(window, true);
+  }
 }
