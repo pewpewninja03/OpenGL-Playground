@@ -9,6 +9,9 @@
 #include <string>
 
 class Shader {
+ private:
+  void checkCompileErrors(unsigned int shader, std::string type);
+
  public:
   unsigned int ID;
 
