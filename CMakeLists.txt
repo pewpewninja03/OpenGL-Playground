@@ -18,3 +18,4 @@ target_link_libraries(test glfw OpenGL::GL Threads::Threads dl)
 
 # Copy shaders directory to build directory
 file(COPY ${CMAKE_SOURCE_DIR}/shaders DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
