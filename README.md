@@ -4,7 +4,7 @@ Learning OpenGL with C++. This is what I've managed to create so far.
 
 ## Demo
 
-https://github.com/user-attachments/assets/ed1fbd2c-6e03-4ab3-a79a-7b1a43d39b16
+https://github.com/user-attachments/assets/b81e7a47-3213-4263-a5ad-ae9b5a1a19ae
 
 *Textured 3D cubes with depth and camera movement*
 
