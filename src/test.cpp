@@ -1,5 +1,4 @@
 // clang-format off
-#include <algorithm>
 #include <cmath>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -18,13 +17,20 @@
 #include "glm/trigonometric.hpp"
 #include "shader.h"
 #define STB_IMAGE_IMPLEMENTATION
+#include "camera.h"
 #include "stb_image.h"
 
 #define WIDTH 800
 #define HEIGHT 600
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
 void processInput(GLFWwindow* window);
+
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
 
 int main() {
   // set up window context
@@ -41,6 +47,8 @@ int main() {
   }
 
   glfwMakeContextCurrent(window);
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  glfwSetScrollCallback(window, scroll_callback);
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     std::cout << "Failed to initialized GLAD" << std::endl;
@@ -108,7 +116,7 @@ int main() {
                                glm::vec3(2.4f, -0.4f, -3.5f),  glm::vec3(-1.7f, 3.0f, -7.5f),
                                glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
                                glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
-  unsigned int VAO, VBO, EBO;
+  unsigned int VAO, VBO;
   // generate
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
@@ -187,6 +195,10 @@ int main() {
 
   // Display contents in window
   while (!glfwWindowShouldClose(window)) {
+    float currentFrame = (float)glfwGetTime();
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+
     processInput(window);
 
     // Background color
@@ -200,12 +212,10 @@ int main() {
 
     shader.use();
 
-    glm::mat4 view = glm::mat4(1.0f);
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-
-    glm::mat4 projection = glm::perspective(glm::radians(60.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
-
+    glm::mat4 view = camera.GetViewMatrix();
     shader.setMat4("view", view);
+
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
     shader.setMat4("projection", projection);
 
     glBindVertexArray(VAO);
@@ -213,11 +223,7 @@ int main() {
       glm::mat4 model = glm::mat4(1.0f);
       model = glm::translate(model, cubePositions[i]);
       float angle = 20.0f * i;
-      if (i % 4 == 0) {
-        model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(1.0f, 0.7f, 0.5f));
-      } else {
-        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-      }
+      model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
       int modelLocation = glGetUniformLocation(shader.ID, "model");
       glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 
@@ -230,18 +236,55 @@ int main() {
 
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
-  glDeleteBuffers(1, &EBO);
 
   glfwTerminate();
   return 0;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); }
-void processInput(GLFWwindow* window) {
-  int x = 0;
+
+void processCameraMovement(GLFWwindow* window) {
+  int wPressed = glfwGetKey(window, GLFW_KEY_W);
+  int aPressed = glfwGetKey(window, GLFW_KEY_A);
+  int sPressed = glfwGetKey(window, GLFW_KEY_S);
+  int dPressed = glfwGetKey(window, GLFW_KEY_D);
+
+  int ePressed = glfwGetKey(window, GLFW_KEY_E);
+  int qPressed = glfwGetKey(window, GLFW_KEY_Q);
+
+  if (wPressed == GLFW_PRESS) {
+    camera.ProcessKeyboard(FORWARD, deltaTime);
+  }
+  if (sPressed == GLFW_PRESS) {
+    camera.ProcessKeyboard(BACKWARD, deltaTime);
+  }
+  if (aPressed == GLFW_PRESS) {
+    camera.ProcessKeyboard(LEFT, deltaTime);
+  }
+  if (dPressed == GLFW_PRESS) {
+    camera.ProcessKeyboard(RIGHT, deltaTime);
+  }
+  if (ePressed == GLFW_PRESS) {
+    camera.ProcessKeyboard(UP, deltaTime);
+  }
+  if (qPressed == GLFW_PRESS) {
+    camera.ProcessKeyboard(DOWN, deltaTime);
+  }
+}
+
+void processExit(GLFWwindow* window) {
   int escapePressed = glfwGetKey(window, GLFW_KEY_ESCAPE);
   int spacebarPressed = glfwGetKey(window, GLFW_KEY_SPACE);
   if (escapePressed == GLFW_PRESS || spacebarPressed == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
+}
+
+void processInput(GLFWwindow* window) {
+  processExit(window);
+  processCameraMovement(window);
+}
+
+void scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {
+  camera.ProcessMouseScroll(static_cast<float>(yOffset));
 }
